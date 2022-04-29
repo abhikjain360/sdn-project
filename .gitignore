@@ -1,2 +1,7 @@
 genpacket/target
 .ipynb_checkpoints
+env
+swtichtree.p4i
+swtichtree.json
+model_output
+model_output.json
