@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 
 dfs = []
 cwd = os.getcwd()
-data_dir = os.path.join(cwd, 'cicids2017/TrafficLabelling')
+data_dir = os.path.join(cwd, '../cicids2017/TrafficLabelling')
 
 # opening the directory, and reading all the files. it is expected that they
 # all will be csv only
@@ -77,7 +77,7 @@ dtest = xgb.DMatrix(X_test, label=y_test)
 ### MODEL TRAINING ###
 
 # training a model using GPU
-bst = xgb.train({'tree_method': 'gpu_hist'}, dtrain, 10,
+bst = xgb.train({'tree_method': 'gpu_hist', 'max_depth': 4}, dtrain, 5,
                 [(dtest, 'eval'), (dtrain, 'train')])
 
 # saving in format XGBoost can reload the model without retraining
