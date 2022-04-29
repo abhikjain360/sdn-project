@@ -6,8 +6,8 @@ The code has only been tested to run on linux.
 
 Following needs to be installed inorder to run the model:
 
-- [`p4c compiler`](https://github.com/p4lang/p4c)
-- [`behaviour-model (bmv2)`](https://github.com/p4lang/behavioral-model)
+- [`behaviour-model (bmv2)`](https://github.com/p4lang/behavioral-model). Refer to repository's README for installation instructions.
+- [`p4c compiler`](https://github.com/p4lang/p4c). Refer to repository's README for installation instructions.
 - `runtime_CLI.py` script, as well as python enviroment to run it. The script can be found [here](https://github.com/p4lang/behavioral-model/blob/main/tools/runtime_CLI.py) in `behavioral-model`'s repository.
 - `iproute2` tools to create virtual dummy interfaces to bind the p4 switch to.
 - `dummy` linux model to create virtual interfaces.
@@ -16,6 +16,12 @@ Following needs to be installed inorder to run the model:
 The above dependencies will get the model running on a bmv2 instance. If you wish to inspect packets, you will need a network device capturing tool like `wireshark`.
 
 To run the scripts provided inside `genpacket` directory, you'll need `rust` compiler and `cargo` toolchain installed.
+
+We provide a `requirements.txt` to install all the python dependencies required to run all scripts using `pip`. Run the following:
+```sh
+pip install -r requirements.txt
+
+```
 
 ## How to Run
 
@@ -30,14 +36,56 @@ To run the scripts provided inside `genpacket` directory, you'll need `rust` com
 	8. Active Minimum
 	9. Flow Inter-Arrival-Time (IAT) Minimum
 
-   You can also use the pre-trained model output, provided in the `model_output.json`, or train your model using our jupyter notebook at `Untitled.py`. (TODO: separate out the model training into a separate python file). See 'Model Training' for more details.
+You can also use the pre-trained model output, provided in the `model_output.json`, or train your model using our script `train_model.py`. To train the model using the script, you must have installed `xgboost==1.5.2`, `pandas==1.4.1` and `scikit-learn==1.0.2`. Run:
+```sh
+pip install xgboost==1.5.2 pandas==1.4.1 scikit-learn==1.0.2
+python train_model.py
+```
 
 2. Generate the match-and-action rules by using the `pyJsonParser.py`. It will output the required tables to `commands.txt`, so need to redirect the output while running the script.
-3. Modify the `commands.txt` to clear all the tables, and then add your required forwarding rules based on malware detection to it as well on the table `p4_exact`. See the section 'Table Naming and Match rules' for further details.
-4.
+```sh
+python pyJsonParser.py
+```
+
+3. Modify the `swtitchtree.p4` file according to your random forest's structure. Currently it is set to handle 5 trees, each with depth of 5, and threshold for binary classification to 0.5. If the csv files you have used to train model use dirrent timeout durations for active flow timeout duration and flow timeout duration, then also change these parameters in p4.
+
+4. Modify the `commands.txt` to clear all the tables, and then add your required forwarding rules based on malware detection to it as well on the table `p4_exact`. See the section 'Table Naming and Match Rules' for further details.
+
+5. Compile the `swtitchtree.p4` program using p4c.
+```sh
+p4c --target bmv2 --arch v1model swtichtree.p4
+```
+
+6. Generate the dummy interfaces which the virtual p4 switch will bind to/listen on. This allows us to send packets to switch by sending packets to these dummy interfaces.
+
+7. Create dummy network interfaces to which p4 switch can bind to. We provide a `create_virtual_interfaces.sh` script to do that but requires `iproute2` as a dependency. It creates dummy interfaces with names `eth00`, `eth01`, and so on. The only argument it takes in 1 less than total number of interfaces you wish to create. So, in order to create 3 interfaces names `eth00`, `eth01` and `eth02`
+```sh
+./create_virtual_interfaces.sh 2
+```
+
+To manually create a dummy interface, run:
+```sh
+sudo modprobe dummy
+sudo ip link add <interface-name> type dummy
+sudo ip link set dev <interface-name> mtu 65536
+sudo ip link set <interface-name> up
+```
+
+8. Run the output of compilation using [`simple_switch`] (which is obtained when installing bmv2) and bind it's port to dummy interfaces taht we created in previous step.
+```sh
+sudo simple_switch -i 0@eth00 -i 1@eth01 -i 2@eth02 swtichtree.json
+```
+
+9. Pass on the commands from `commands.txt` to the running instance of switch using `runtime_CLI.py` script. This requires `p4runtime==1.3.0` and `thrift==0.15.0`.
+```sh
+runtime_CLI.py < commands.txt
+```
+
+## Table Naming and Match Rules
 
 ## Acknowledgements
 
 - [SwitchTree](https://github.com/ksingh25/SwitchTree)
 - [CICIDS2017 dataset](https://www.unb.ca/cic/datasets/ids-2017.html)
 - [CICFlowMeter](https://github.com/CanadianInstituteForCybersecurity/CICFlowMeter)
+- [p4lang](https://p4.org/)
