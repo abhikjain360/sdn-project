@@ -2,15 +2,15 @@
 
 ## Dependencies
 
-The code has only been tested to run on linux.
+The code has only been tested to run on Linux.
 
-Following needs to be installed inorder to run the model:
+Following needs to be installed in order to run the model:
 
 - [`behaviour-model (bmv2)`](https://github.com/p4lang/behavioral-model). Refer to repository's README for installation instructions.
 - [`p4c compiler`](https://github.com/p4lang/p4c). Refer to repository's README for installation instructions.
-- `runtime_CLI.py` script, as well as python enviroment to run it. The script can be found [here](https://github.com/p4lang/behavioral-model/blob/main/tools/runtime_CLI.py) in `behavioral-model`'s repository.
+- `runtime_CLI.py` script, as well as python environment to run it. The script can be found [here](https://github.com/p4lang/behavioral-model/blob/main/tools/runtime_CLI.py) in `behavioral-model`'s repository.
 - `iproute2` tools to create virtual dummy interfaces to bind the p4 switch to.
-- `dummy` linux model to create virtual interfaces.
+- `dummy` Linux model to create virtual interfaces.
 - [CICIDS2017 dataset](https://www.unb.ca/cic/datasets/ids-2017.html)
 
 The above dependencies will get the model running on a bmv2 instance. If you wish to inspect packets, you will need a network device capturing tool like `wireshark`.
@@ -47,7 +47,7 @@ python train_model.py
 python pyJsonParser.py
 ```
 
-3. Modify the `swtitchtree.p4` file according to your random forest's structure. Currently it is set to handle 5 trees, each with depth of 5, and threshold for binary classification to 0.5. If the csv files you have used to train model use dirrent timeout durations for active flow timeout duration and flow timeout duration, then also change these parameters in p4.
+3. Modify the `swtitchtree.p4` file according to your random forest's structure. Currently it is set to handle 5 trees, each with depth of 5, and threshold for binary classification to 0.5. If the csv files you have used to train model use different timeout durations for active flow timeout duration and flow timeout duration, then also change these parameters in p4.
 
 4. Modify the `commands.txt` to clear all the tables, and then add your required forwarding rules based on malware detection to it as well on the table `p4_exact`. See the section 'Table Naming and Match Rules' for further details.
 
@@ -71,7 +71,7 @@ sudo ip link set dev <interface-name> mtu 65536
 sudo ip link set <interface-name> up
 ```
 
-8. Run the output of compilation using [`simple_switch`] (which is obtained when installing bmv2) and bind it's port to dummy interfaces taht we created in previous step.
+8. Run the output of compilation using [`simple_switch`] (which is obtained when installing bmv2) and bind it's port to dummy interfaces that we created in previous step.
 ```sh
 sudo simple_switch -i 0@eth00 -i 1@eth01 -i 2@eth02 swtichtree.json
 ```
@@ -82,6 +82,8 @@ runtime_CLI.py < commands.txt
 ```
 
 ## Table Naming and Match Rules
+
+Trees and levels of trees start at index 0. Each match rule corresponds to each node in that particular decision tree. Each table corresponds to a particular level in that tree. So, for the first tree at first (root) level, the table you should add records to is `tree0_level0`. The table naming convention is `table<table_index>_level<level_index>`. By default, we use 5 trees with upto 5 levels in each tree. If this is not the case with your model, the `swtichtree.p4` file needs to be changed accordingly to add more tables.
 
 ## Acknowledgements
 
