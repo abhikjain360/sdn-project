@@ -2,7 +2,6 @@
     XGBOOST JSON PARSER TO P4 Commands
 """
 import json
-import sys
 
 
 class Queue:
@@ -138,9 +137,11 @@ def main():
                 output += "table_add tree{}_level{} ".format(i, det[1])
                 parent = curTree.indexToNode[det[2]].parent
                 if parent >= 2147483646:
-                    output += "check_feature {} {} {}".format(det[2], 1024, det[6] % 2)
+                    output += "check_feature {} {} {}".format(
+                        det[2], 1024, det[6] % 2)
                 else:
-                    output += "check_feature {} {} {}".format(det[2], parent, det[5] % 2)
+                    output += "check_feature {} {} {}".format(
+                        det[2], parent, det[5] % 2)
                 output += " => "
                 output += "{} {} {}\n".format(det[2], det[3], int(det[4]))
             else:
@@ -148,17 +149,21 @@ def main():
                 if det[4] > 0:
                     parent = curTree.indexToNode[det[2]].parent
                     if parent >= 2147483646:
-                        output += "add_value {} {} {}".format(det[2], 1024, det[6] % 2)
+                        output += "add_value {} {} {}".format(
+                            det[2], 1024, det[6] % 2)
                     else:
-                        output += "add_value {} {} {}".format(det[2], parent, det[6] % 2)
+                        output += "add_value {} {} {}".format(
+                            det[2], parent, det[6] % 2)
                     output += " => "
                     output += str(int(det[4] * 1000)) + "\n"
                 else:
                     parent = curTree.indexToNode[det[2]].parent
                     if parent >= 2147483646:
-                        output += "sub_value {} {} {}".format(det[2], 1024, det[6] % 2)
+                        output += "sub_value {} {} {}".format(
+                            det[2], 1024, det[6] % 2)
                     else:
-                        output += "sub_value {} {} {}".format(det[2], parent, det[6] % 2)
+                        output += "sub_value {} {} {}".format(
+                            det[2], parent, det[6] % 2)
                     output += " => "
                     output += str(int(-1 * det[4] * 1000)) + "\n"
         ans += output
